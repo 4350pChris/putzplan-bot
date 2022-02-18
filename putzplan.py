@@ -19,7 +19,7 @@ async def fetch_users(context, next):
         next()
 
 
-def create_home_view(context, next):
+async def create_home_view(context, next):
     context["home_view"] = {
         "type": "home",
         "blocks": [
