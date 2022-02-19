@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y sqlite3 libsqlite3-dev
 RUN mkdir /db
 RUN /usr/bin/sqlite3 /db/putzplan.db
 WORKDIR /app/
-COPY *.py /app/
+COPY . /app/
 
 VOLUME [ "/db" ]
 EXPOSE 3000
