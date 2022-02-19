@@ -1,3 +1,5 @@
 slack_bolt
 aiohttp>=3,<4
 python-dotenv
+orm
+orm[sqlite]

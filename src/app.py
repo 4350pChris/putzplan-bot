@@ -1,22 +1,21 @@
 from slack_bolt.async_app import AsyncApp
 import logging
-import os
-from dotenv import load_dotenv
-load_dotenv()
+from .db.models.user import User
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 app = AsyncApp()
 
 
 async def fetch_users(context, next):
     try:
         # TODO: hier DB zeug zum fetchen
-        users = ["U016NV71SP4"]
+        db_users = await User.objects.all()
+        users = [u.user_id for u in db_users]
     except Exception:
         users = []
     finally:
         context["initial_users"] = users
-        next()
+        await next()
 
 
 async def create_home_view(context, next):
@@ -44,7 +43,7 @@ async def create_home_view(context, next):
             }
         ]
     }
-    next()
+    await next()
 
 
 @app.event(event="app_home_opened", middleware=[fetch_users, create_home_view])
@@ -66,9 +65,15 @@ async def update_home_tab(event, client, logger, context):
 @app.action("putzplan-select-action")
 async def updatePutzplan(ack, payload, client, logger):
     await ack()
-    users = logger.info(payload["selected_users"])
-    # TODO: save in DB
+    current_users = [u.user_id for u in await User.objects.all()]
+    selected_users = payload["selected_users"]
+    users_added = [u for u in selected_users if u not in current_users]
+    users_removed = [u for u in current_users if u not in selected_users]
 
+    await User.objects.filter(user_id__in=users_removed).delete()
 
-if __name__ == "__main__":
-    app.start(port=int(os.environ.get("PORT", 3000)))
+    for user_id in users_added:
+        try:
+            await User.objects.create(user_id=user_id)
+        except Exception as e:
+            logger.error(e)
