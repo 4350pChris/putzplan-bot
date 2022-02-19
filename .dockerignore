@@ -1,0 +1,4 @@
+.env
+.venv
+ngrok-stable-linux-amd64
+putzdienst.db
