@@ -62,11 +62,11 @@ async def update_home_tab(event, client, logger, context):
         logger.error(f"Error publishing home tab: {e}")
 
 
-@app.action("putzplan-select-action")
-async def updatePutzplan(ack, payload, client, logger):
+@app.action({"action_id": "putzplan-select-action"}, middleware=[fetch_users])
+async def update_putzplan(ack, action, context, logger):
     await ack()
-    current_users = [u.user_id for u in await User.objects.all()]
-    selected_users = payload["selected_users"]
+    current_users = context["initial_users"]
+    selected_users = action["selected_users"]
     users_added = [u for u in selected_users if u not in current_users]
     users_removed = [u for u in current_users if u not in selected_users]
 
