@@ -1,0 +1,29 @@
+version: "3.7"
+
+services:
+  bot:
+    image: putzplan-bot:latest
+    build: .
+    volumes:
+      - db:/db
+    networks:
+      - docker-network
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.putzplan-secure.entrypoints=https,putzplan"
+      - "traefik.http.routers.putzplan-secure.rule=Host(`putzplan.ennen.dev`)"
+      - "traefik.http.routers.putzplan-secure.tls=true"
+      - "traefik.http.routers.putzplan-secure.tls.certresolver=http"
+      - "traefik.http.routers.putzplan-secure.service=putzplan"
+      - "traefik.http.routers.putzplan-secure.middlewares=default-headers@file"
+      - "traefik.http.services.putzplan.loadbalancer.server.port=8008"
+      - "traefik.docker.network=docker-network"
+
+
+networks:
+  docker-network:
+    external: true
+
+volumes:
+  db:
