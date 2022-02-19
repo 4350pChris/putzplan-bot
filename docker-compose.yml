@@ -19,7 +19,7 @@ services:
       - "traefik.http.routers.putzplan-secure.tls.certresolver=http"
       - "traefik.http.routers.putzplan-secure.service=putzplan"
       - "traefik.http.routers.putzplan-secure.middlewares=default-headers@file"
-      - "traefik.http.services.putzplan.loadbalancer.server.port=8008"
+      - "traefik.http.services.putzplan.loadbalancer.server.port=3000"
       - "traefik.docker.network=docker-network"
 
 
