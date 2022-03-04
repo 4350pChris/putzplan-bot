@@ -1,6 +1,12 @@
+from asyncio.log import logger
+import datetime
+from email import errors
 from slack_bolt.async_app import AsyncApp
 import logging
+
+from zuweisung import generatePutzplan
 from .db.models.user import User
+from .db.models.room import Room
 
 logging.basicConfig(level=logging.INFO)
 app = AsyncApp()
@@ -16,6 +22,13 @@ async def fetch_users(context, next):
     finally:
         context["initial_users"] = users
         await next()
+
+async def fetch_rooms():
+        return await Room.objects.all()
+
+async def fetch_users2():
+        return await User.objects.all()
+
 
 
 async def create_home_view(context, next):
@@ -61,6 +74,35 @@ async def update_home_tab(event, client, logger, context):
     except Exception as e:
         logger.error(f"Error publishing home tab: {e}")
 
+
+# TODO: Event, das alle 2 Wochen stattfindet @app.event(event="app_home_opened", middleware=[fetch_users, create_home_view])
+putzpläne = generatePutzplan(fetch_users2, fetch_rooms)
+weeknum = putzpläne[0]
+timestamp = putzpläne[1]
+ppUngerade = putzpläne[2]
+ppGerade = putzpläne[3]
+channel_id = "CTS023PCG"
+
+try:
+    # Call the chat.scheduleMessage method using the WebClient
+    if (int(weeknum)%2 == 1):
+        result = client.chat_scheduleMessage(
+            channel=channel_id,
+            text=ppUngerade,
+            post_at=timestamp
+        )
+        # Log the result
+        logger.info(result)
+    else: 
+        result = client.chat_scheduleMessage(
+            channel=channel_id,
+            text=ppGerade,
+            post_at=timestamp + datetime.timedelta(weeks = 1)
+        )
+        # Log the result
+        logger.info(result)
+except Exception as e:
+    logger.error("Error scheduling message: {}".format(e))
 
 @app.action({"action_id": "putzplan-select-action"}, middleware=[fetch_users])
 async def update_putzplan(ack, action, context, logger):
